@@ -1,0 +1,10 @@
+org/HFC/Encoder.class
+org/HFC/HuffManEncoder.class
+org/HFC/TreeBuildStrategy.class
+org/HFC/TreeNode.class
+org/HFC/HuffManTree.class
+org/HFC/Decoder.class
+org/HFC/HuffManTreeBuildStrategy.class
+org/HFC/Tree.class
+org/HFC/HuffManDecoder.class
+org/HFC/HFC.class
