@@ -5,12 +5,10 @@ import org.apache.logging.log4j.Logger;
 import org.loadbalancer.config.ServerConfig;
 import org.loadbalancer.models.BackendServer;
 import org.loadbalancer.service.BalancingStrategy;
-import org.loadbalancer.service.ServerLinkedList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -33,10 +31,10 @@ public class Controller {
     @GetMapping("")
     public ResponseEntity<Mono<String>> tryLoadBalancer()
     {
-        logger.info("Test loadbalancer hit");
+        logger.info("Test load balancer hit");
 
         try{
-            WebClient client = WebClient.create(strategy.getNext().getAddress());
+            WebClient client = WebClient.create(strategy.getServer().getAddress());
             Mono<String> ret = client.get().retrieve().bodyToMono(String.class).timeout(Duration.ofSeconds(5));
             return  ResponseEntity.status(HttpStatus.ACCEPTED).body(ret);
 

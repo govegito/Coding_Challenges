@@ -72,7 +72,10 @@ private void startHealthCheck() {
         backgroundThread.start();
     }
 }
+```
+And inside HealthCheckRunnable class we have this function that will hit the backend server and perform update on the server list
 
+```java
 public void run() {
     String response = null;
     try {
@@ -98,3 +101,54 @@ public void run() {
 This approach ensures that only healthy servers receive traffic, enhancing the reliability and efficiency of the load balancer.
 
 In the next phase, we can explore advanced load balancing techniques, such as sticky sessions and consistent hashing, to further optimize performance and resource utilization.
+
+## Consistent Hashing
+
+So, while the round-robin algorithm is good for stateless backend servers, it falls short for stateful applications. In this case, it's crucial that each user's request goes to its designated backend server.
+
+First things first, we need a reliable way to uniquely identify users.
+
+### Unique User Identification Methods:
+
+- **Cookies:** When a user visits a website, the server can send a unique identifier (cookie) to the user's browser, which the browser then sends back with each subsequent request. This allows the server to recognize the user.
+- **Session IDs:** Servers can generate a unique session ID for each user session. This ID is typically stored either in a cookie or appended to URLs and is used to associate subsequent requests with the same session.
+- **IP Address:** Though not completely reliable due to dynamic IP assignments and shared networks (like in the case of proxies), the IP address can be used to identify a user. However, this method alone is not sufficient for accurate user identification.
+- **User Accounts:** Users can create accounts on the website, and upon logging in, they provide unique credentials (such as username and password) which the server can use to identify them for subsequent requests.
+- **Browser Fingerprinting:** Various attributes of the user's browser and device can be combined to create a unique identifier, such as the user-agent string, screen resolution, installed plugins, etc. However, this method is not always accurate and can be affected by privacy settings and browser configurations.
+- **OAuth Tokens:** In scenarios where authentication is handled by a third-party service (like Google or Facebook), the web server can use OAuth tokens provided by these services to identify the user.
+
+For our case, we'll utilize a token ID that the user will pass while hitting the load balancer.
+
+Alright, so we have user identification squared away. Now let's address balancing these users evenly among all the backend servers.
+
+One approach could be as simple as `(TokenID % server_list_size)`.
+
+However, this straightforward approach has its limitations:
+- It assumes even distribution of token IDs.
+- It doesn't account for frequent server failures.
+
+So, let's delve into the concept of consistent hashing.
+
+### The Hash Ring
+
+Visualize a ring where both servers and users are placed using the same hashing function. Each user is then assigned to the server immediately next on the ring going clockwise.
+
+<img src="img_2.png" alt="Image" width="300" height="300">
+
+Seems good, right? We can evenly distribute the load without any issue. But hold on, what if a server goes down?
+
+<img src="img_4.png" alt="Image" width="300" height="300">
+
+In such a scenario, all users on the failed server get reassigned to the next available server. This can lead to skewed load distribution.
+
+To tackle this, we introduce virtual nodes. By breaking down the server's space into smaller chunks and distributing them across the ring with virtual nodes, we can ensure uniform load distribution even when servers fail.
+
+<img src="img_5.png" alt="Image" width="300" height="300">
+
+So, whenever a server goes down, its users get reassigned in a uniformly distributed manner.
+
+And that, my friend, is the essence of consistent hashing within a load balancer.
+
+Consistent Hashing isn't just about balancing web requests; it's applicable to distributing any type of load among a system of workers, whether it's serving data to multiple nodes or similar scenarios.
+
+Now that we grasp the concept and necessity of such a system, let's dive into the exciting world of coding!

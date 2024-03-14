@@ -2,12 +2,10 @@ package org.loadbalancer.service;
 
 import org.loadbalancer.models.BackendServer;
 
-import java.util.List;
-
 public interface BalancingStrategy {
 
 
-    public BackendServer getNext();
+    public BackendServer getServer();
 
     public void addServer(BackendServer server);
 

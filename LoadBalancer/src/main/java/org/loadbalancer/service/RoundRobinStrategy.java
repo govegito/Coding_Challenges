@@ -16,7 +16,7 @@ public class RoundRobinStrategy implements BalancingStrategy{
     @Autowired
     private ServerLinkedList serverList;
     @Override
-    public BackendServer getNext() {
+    public BackendServer getServer() {
         try {
             return this.serverList.getNextServer();
         } catch (ServerNotFoundException e) {
