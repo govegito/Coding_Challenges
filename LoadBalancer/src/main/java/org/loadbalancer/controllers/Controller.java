@@ -6,6 +6,7 @@ import org.loadbalancer.config.ServerConfig;
 import org.loadbalancer.models.BackendServer;
 import org.loadbalancer.service.BalancingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,19 +23,24 @@ public class Controller {
 
     private static final Logger logger = LogManager.getLogger(Controller.class);
 
+    private final BalancingStrategy strategy;
+
     @Autowired
-    private BalancingStrategy strategy;
+    public Controller(final BalancingStrategy strategy) {
+        this.strategy = strategy;
+    }
 
     @Autowired
     private ServerConfig config;
 
-    @GetMapping("")
-    public ResponseEntity<Mono<String>> tryLoadBalancer()
+    @GetMapping("/{id}")
+    public ResponseEntity<Mono<String>> tryLoadBalancer(@PathVariable String id)
     {
         logger.info("Test load balancer hit");
 
         try{
-            WebClient client = WebClient.create(strategy.getServer().getAddress());
+            WebClient client = WebClient.create(strategy.getServer(id).getAddress());
+
             Mono<String> ret = client.get().retrieve().bodyToMono(String.class).timeout(Duration.ofSeconds(5));
             return  ResponseEntity.status(HttpStatus.ACCEPTED).body(ret);
 

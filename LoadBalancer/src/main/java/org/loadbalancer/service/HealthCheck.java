@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 public class HealthCheck {
 
     @Autowired
-    private ServerLinkedList list;
+    private BalancingStrategy strategy;
 
     @Autowired
     private ServerConfig config;
@@ -22,6 +22,10 @@ public class HealthCheck {
     private Thread backgroundThread;
     private volatile boolean running = false;
 
+    @Autowired
+    public HealthCheck(final BalancingStrategy strategy) {
+        this.strategy = strategy;
+    }
     @PostConstruct
     private void startHealthCheck()
     {
@@ -34,7 +38,7 @@ public class HealthCheck {
                     try{
                         for(int i=0;i<config.getAddress().size();i++)
                         {
-                            HealthCheckRunnable runnable = new HealthCheckRunnable(restTemplate,list,config,i);
+                            HealthCheckRunnable runnable = new HealthCheckRunnable(restTemplate,strategy,config.getId().get(i),config.getAddress().get(i));
                             new Thread(runnable).start();
                         }
                         Thread.sleep(10000);

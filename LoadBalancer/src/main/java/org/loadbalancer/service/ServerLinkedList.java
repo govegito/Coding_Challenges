@@ -151,17 +151,24 @@ public class ServerLinkedList {
         }
     }
 
-    public void addBackServer(int i) {
+    public void addBackServer(String serverid) {
 
-        if(this.isActive.getOrDefault(config.getId().get(i),false))
+        if(this.isActive.getOrDefault(serverid,false))
             return ;
         try{
             lock.lock();
             logger.info("Add back server called ");
 
-            if(!isActive.getOrDefault(config.getId().get(i),false))
+            if(!isActive.getOrDefault(serverid,false))
             {
-                addServer(new BackendServer(config.getId().get(i),config.getAddress().get(i)));
+                for(int i=0;i<config.getId().size();i++)
+                {
+                    if(config.getId().get(i).equalsIgnoreCase(serverid))
+                    {
+                        addServer(new BackendServer(config.getId().get(i),config.getAddress().get(i)));
+                        break;
+                    }
+                }
             }
         }
         finally {

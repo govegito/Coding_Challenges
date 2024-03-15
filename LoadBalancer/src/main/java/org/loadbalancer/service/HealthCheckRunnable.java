@@ -12,22 +12,23 @@ public class HealthCheckRunnable implements Runnable{
 
     private static final Logger logger = LogManager.getLogger(HealthCheckRunnable.class);
     private volatile RestTemplate template;
-    private volatile ServerLinkedList list;
-    private volatile ServerConfig config;
-    private volatile int t;
+    private volatile BalancingStrategy strategy;
 
-    public HealthCheckRunnable(RestTemplate template, ServerLinkedList list, ServerConfig config, int t) {
+    private final String serverId;
+    private final String address;
+
+    public HealthCheckRunnable(RestTemplate template, BalancingStrategy strategy, String serverId, String address) {
         this.template = template;
-        this.list = list;
-        this.config = config;
-        this.t = t;
+        this.strategy = strategy;
+        this.serverId=serverId;
+        this.address=address;
     }
 
     @Override
     public void run() {
         String responge=null;
         try{
-            responge= template.getForObject(config.getAddress().get(t),String.class);
+            responge= template.getForObject(address,String.class);
         }catch(Exception e)
         {
             logger.error(e.getMessage());
@@ -35,15 +36,17 @@ public class HealthCheckRunnable implements Runnable{
 
         if(responge!=null)
         {
-            logger.info("Server is up "+config.getId().get(t));
-            list.addBackServer(t);
+            logger.info("Server is up "+serverId);
+            strategy.addBackServer(serverId);
         }
         else {
-            logger.info("Calling server out "+ config.getId().get(t));
+            logger.info("Calling server out "+ serverId);
             try {
-                list.removeServer(config.getId().get(t));
-            } catch (ServerNotFoundException e) {
+                strategy.removeServer(serverId);
+            } catch (Exception e) {
                 logger.error(e.getMessage());
+                Thread.currentThread().interrupt();
+
             }
         }
     }

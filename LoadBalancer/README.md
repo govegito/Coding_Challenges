@@ -59,7 +59,7 @@ private void startHealthCheck() {
             while (running) {
                 try {
                     for (int i = 0; i < config.getAddress().size(); i++) {
-                        HealthCheckRunnable runnable = new HealthCheckRunnable(restTemplate, list, config, i);
+                        HealthCheckRunnable runnable = new HealthCheckRunnable(restTemplate,strategy,config.getId().get(i),config.getAddress().get(i));
                         new Thread(runnable).start();
                     }
                     Thread.sleep(10000);
@@ -76,26 +76,32 @@ private void startHealthCheck() {
 And inside HealthCheckRunnable class we have this function that will hit the backend server and perform update on the server list
 
 ```java
-public void run() {
-    String response = null;
-    try {
-        response = template.getForObject(config.getAddress().get(t), String.class);
-    } catch (Exception e) {
-        logger.error(e.getMessage());
-    }
-
-    if (response != null) {
-        logger.info("Server is up " + config.getId().get(t));
-        list.addBackServer(t);
-    } else {
-        logger.info("Server down " + config.getId().get(t));
-        try {
-            list.removeServer(config.getId().get(t));
-        } catch (ServerNotFoundException e) {
+    @Override
+    public void run() {
+        String responge=null;
+        try{
+            responge= template.getForObject(address,String.class);
+        }catch(Exception e)
+        {
             logger.error(e.getMessage());
         }
+
+        if(responge!=null)
+        {
+            logger.info("Server is up "+serverId);
+            strategy.addBackServer(serverId);
+        }
+        else {
+            logger.info("Calling server out "+ serverId);
+            try {
+                strategy.removeServer(serverId);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+                Thread.currentThread().interrupt();
+
+            }
+        }
     }
-}
 ```
 
 This approach ensures that only healthy servers receive traffic, enhancing the reliability and efficiency of the load balancer.
@@ -152,3 +158,58 @@ And that, my friend, is the essence of consistent hashing within a load balancer
 Consistent Hashing isn't just about balancing web requests; it's applicable to distributing any type of load among a system of workers, whether it's serving data to multiple nodes or similar scenarios.
 
 Now that we grasp the concept and necessity of such a system, let's dive into the exciting world of coding!
+
+### Coding hash ring
+
+We've decided to implement the MD5 hashing algorithm to generate unique hashes for all our virtual servers. While it's acknowledged that MD5 can potentially produce collisions, we're accepting this risk for the sake of simplicity. 
+Given the scale at which we're operating, the likelihood of collisions is extremely low, making it a reasonable trade-off for our needs.
+```java
+ private long generateHash(String key) {
+        try{
+            lock.lock();
+            md.reset();
+            md.update(key.getBytes());
+            byte[] digest = md.digest();
+            long hash = ((long) (digest[3] & 0xFF) << 24) | ((long) (digest[2] & 0xFF) << 16) | ((long) (digest[1] & 0xFF) << 8) | ((long) (digest[0] & 0xFF));
+            return hash;
+        }finally {
+            lock.unlock();
+        }
+    }
+```
+Now for the hash ring and fetching the immediate next server on the ring. Store them in a sorted manner and then get the immediate next value for a given value.
+
+To efficiently implement the functionality of finding the immediate next server on the hash ring, we can utilize a TreeMap data structure in Java. TreeMap stores key-value pairs in sorted order based on the natural ordering of its keys or a custom comparator provided at the time of creation. We'll store the hash values of servers as keys and the corresponding server information as values. 
+This allows us to quickly find the next server hash given a particular hash value.
+```java
+    @Override
+    public BackendServer getServer(String key) {
+        try{
+            lock.lock();
+            logger.info("Get server called for key "+ key);
+            if (serverRing.isEmpty()) {
+                logger.error("Hash ring is empty");
+                throw new RuntimeException("Server list is empty");
+            }
+            long hash = generateHash(key);
+            if (!serverRing.containsKey(hash)) {
+                SortedMap<Long, BackendServer> tailMap = serverRing.tailMap(hash);
+                hash = tailMap.isEmpty() ? serverRing.firstKey() : tailMap.firstKey();
+                logger.info("Returning server "+serverRing.get(hash)+" for the key "+key);
+            }
+            return serverRing.get(hash);
+        }finally {
+            lock.unlock();
+        }
+    }
+```
+
+With this we finally complete our journey of developing our own load balancer.
+In this we added functionality for both using a simple round-robin algorithm or using a much scalable algorithm like consistent hashing.
+
+You can toggle the balancing algorithm in the application.properties file by passing either ConsistenHashing or RoundRobing to strategy.name property.
+
+So I believe that there are many things that can be improved in this. be it with how i am handling locking or handling asynchronous request to the server.
+
+I invite you to share your insights and suggestions to enhance our load balancer further, ensuring it operates seamlessly and efficiently in diverse scenarios.
+Peace out!!

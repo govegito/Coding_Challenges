@@ -1,5 +1,9 @@
 package org.loadbalancer.config;
 
+import org.loadbalancer.service.BalancingStrategy;
+import org.loadbalancer.service.ConsistentHashingStrategy;
+import org.loadbalancer.service.RoundRobinStrategy;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +19,7 @@ public class ServerConfig {
     private List<String> id;
     private List<String> address;
 
+    private int numberOfVirtualNodes;
     public List<String> getId() {
         return id;
     }
@@ -46,5 +51,13 @@ public class ServerConfig {
         httpRequestFactory.setConnectTimeout(1000);
         
         return new RestTemplate(httpRequestFactory);
+    }
+
+    public int getNumberOfVirtualNodes() {
+        return numberOfVirtualNodes;
+    }
+
+    public void setNumberOfVirtualNodes(int numberOfVirtualNodes) {
+        this.numberOfVirtualNodes = numberOfVirtualNodes;
     }
 }
