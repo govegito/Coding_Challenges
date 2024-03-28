@@ -189,7 +189,7 @@ public class Consumer {
             if(tobeadded<=0)
                 continue;
 
-            List<String> allocatedPartition=groupCoordinator.getunassignedPartition(consumerId,topic,tobeadded);
+            List<String> allocatedPartition=groupCoordinator.getunassignedPartition(this,topic,tobeadded);
 
             for(String partitionId: allocatedPartition)
             {

@@ -70,9 +70,9 @@ public class ConsumerGroupTest {
         coordinator.addConsumer(consumer1, List.of("topic1","topic2")).get();
 
 
-        Map<String, Map<Consumer, Boolean>> topicToConsumerMapping = coordinator.getTopicToConsumerMapping();
-        assert(topicToConsumerMapping.get("topic1").containsKey(consumer1));
-        assert(topicToConsumerMapping.get("topic2").containsKey(consumer1));
+        Map<Consumer,Map<String,Set<String>>> consumerToPartitionMapping = coordinator.getConsumerToPartitionMapping();
+        assert(consumerToPartitionMapping.get(consumer1).containsKey("topic1"));
+        assert(consumerToPartitionMapping.get(consumer1).containsKey("topic2"));
 
         Map<String,Map<String,Boolean>> partitions= coordinator.getPartitions();
         assert(partitions.containsKey("topic1"));
@@ -106,9 +106,11 @@ public class ConsumerGroupTest {
         coordinator.addConsumer(consumer2, List.of("topic2")).get();
 
 
-        Map<String, Map<Consumer, Boolean>> topicToConsumerMapping = coordinator.getTopicToConsumerMapping();
-        assert(topicToConsumerMapping.get("topic1").containsKey(consumer1));
-        assert(topicToConsumerMapping.get("topic2").containsKey(consumer1));
+        Map<Consumer,Map<String,Set<String>>> consumerToPartitionMapping = coordinator.getConsumerToPartitionMapping();
+        assert(consumerToPartitionMapping.get(consumer1).containsKey("topic1"));
+        assert(consumerToPartitionMapping.get(consumer1).containsKey("topic2"));
+
+        assert(consumerToPartitionMapping.get(consumer2).containsKey("topic2"));
 
         Map<String,Map<String,Boolean>> partitions= coordinator.getPartitions();
         assert(partitions.containsKey("topic1"));
