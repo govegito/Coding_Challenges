@@ -4,7 +4,6 @@ import com.MQ.Config.ProducerConfig;
 import com.MQ.Exception.TopicNotFoundException;
 import com.MQ.core.OffSetManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -14,20 +13,20 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ConsumerGroupCoordinator {
 
-    private volatile ExecutorService executorService;
+    private final ExecutorService executorService;
     private final String consumerGroupId;
-    private volatile Map<String,Map<String,Boolean>> partitions;
-    private volatile Map<Consumer,Map<String,Set<String>>> consumerToPartitionMapping;
-    private volatile Set<String> topicList;
-    private ReentrantLock stateChangeLock = new ReentrantLock();
-    private ReentrantLock rebalancingLock = new ReentrantLock();
+    private final Map<String,Map<String,Boolean>> partitions;
+    private final Map<Consumer,Map<String,Set<String>>> consumerToPartitionMapping;
+    private final Set<String> topicList;
+    private final ReentrantLock stateChangeLock = new ReentrantLock();
+    private final ReentrantLock rebalancingLock = new ReentrantLock();
 
     @Autowired
     private OffSetManager offSetManager;
     @Autowired
     private ProducerConfig producerConfig;
 
-    private Future rebalanceF=null;
+    private final Future rebalancedF =null;
 
     public ConsumerGroupCoordinator(String consumerGroupId) {
         this.executorService = Executors.newSingleThreadExecutor();
@@ -204,7 +203,7 @@ public class ConsumerGroupCoordinator {
     }
 
     public Future getExecutorService() {
-        return rebalanceF;
+        return rebalancedF;
     }
 
     public Map<Consumer, Map<String, Set<String>>> getConsumerToPartitionMapping() {

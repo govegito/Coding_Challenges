@@ -81,7 +81,7 @@ public class ConsumerGroupTest {
         assert(partitions.get("topic1").size()==4);
         assert(partitions.get("topic2").size()==4);
 
-        Map<String, List<String>> partitionsPerTopic = consumer1.getPartitionPerTopic();
+        Map<String, Set<String>> partitionsPerTopic = consumer1.getPartitionPerTopic();
 
         assert(partitionsPerTopic.containsKey("topic1"));
         assert(partitionsPerTopic.containsKey("topic2"));
@@ -119,7 +119,7 @@ public class ConsumerGroupTest {
         assert(partitions.get("topic1").size()==4);
         assert(partitions.get("topic2").size()==4);
 
-        Map<String, List<String>> partitionsPerTopic = consumer1.getPartitionPerTopic();
+        Map<String, Set<String>> partitionsPerTopic = consumer1.getPartitionPerTopic();
 
         assert(partitionsPerTopic.containsKey("topic1"));
         assert(partitionsPerTopic.containsKey("topic2"));
@@ -130,7 +130,7 @@ public class ConsumerGroupTest {
         assert(partitionsPerTopic.get("topic1").size()==4);
         assert(partitionsPerTopic.get("topic2").size()==2);
 
-        Map<String, List<String>> partitionsPerTopic2 = consumer2.getPartitionPerTopic();
+        Map<String, Set<String>> partitionsPerTopic2 = consumer2.getPartitionPerTopic();
 
         assert(partitionsPerTopic2.containsKey("topic2"));
 
