@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@RestController("/topic")
+@RestController
+@RequestMapping("/topic") // Prefix path
 public class TopicController {
     private static final Logger logger = LogManager.getLogger(TopicController.class);
 
@@ -23,7 +24,11 @@ public class TopicController {
     @Autowired
     private ProducerConfig producerConfig;
 
-    @RequestMapping(value = "/addTopic", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/get")
+    public String get(){
+        return "hello";
+    }
+    @RequestMapping(value = "/add-topic", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addTopic(@RequestBody Map<String,String> request)
     {
         String topicName=request.get("topicName");
@@ -34,7 +39,7 @@ public class TopicController {
             try{
                 Topic newTopic= new Topic(topicName,producerConfig.getPartitionNumber());
                 clusterService.addTopic(newTopic);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(newTopic);
+                return ResponseEntity.status(HttpStatus.OK).body(newTopic);
             }
             catch (Exception e)
             {

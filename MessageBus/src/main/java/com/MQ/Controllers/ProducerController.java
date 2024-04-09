@@ -1,11 +1,10 @@
 package com.MQ.Controllers;
 
-import com.MQ.Exception.PartitionNotFoundException;
-import com.MQ.Exception.TopicNotFoundException;
 import com.MQ.Models.Message;
 import com.MQ.Models.MessagePayload;
 import com.MQ.Models.ProducerAcknowledgement;
 import com.MQ.core.ClusterService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.apache.logging.log4j.LogManager;
@@ -16,10 +15,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 
 @Controller
@@ -33,29 +30,37 @@ public class ProducerController {
     @Autowired
     private ClusterService service;
 
+    private final ObjectMapper objectMapper;
+
+    @Autowired
+    public ProducerController(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @PostConstruct
-    public void init()
-    {
+    public void init() {
         this.executorService = Executors.newFixedThreadPool(50);
 
     }
 
     @MessageMapping("/publish/{topic}")
-    public void greeting(@DestinationVariable String topic, MessagePayload message) throws Exception {
-        logger.info("Publish message call received "+topic);
+    public void greeting(@DestinationVariable String topic, String message) throws Exception {
+        logger.info("Publish message call received "+topic+" "+message);
+        MessagePayload messagePayload = objectMapper.readValue(message, MessagePayload.class);
+
         executorService.execute(() -> {
             try {
                 // Process the message
-                Message messageToPublish = new Message(message, topic);
+                Message messageToPublish = new Message(messagePayload, topic);
                 service.writeMessageToTopic(messageToPublish);
                 // Send acknowledgment
-                ProducerAcknowledgement ack = new ProducerAcknowledgement(message.getMessageID(), "ACK");
+                ProducerAcknowledgement ack = new ProducerAcknowledgement(messagePayload.getMessageID(), "ACK");
                 simpMessagingTemplate.convertAndSend("/topic/acknowledgement/" + topic, ack);
             } catch (Exception e) {
                 // Handling exceptions
                 e.printStackTrace();
                 // Send error acknowledgment
-                ProducerAcknowledgement ack = new ProducerAcknowledgement(message.getMessageID(), "FAILED");
+                ProducerAcknowledgement ack = new ProducerAcknowledgement(messagePayload.getMessageID(), "FAILED");
                 simpMessagingTemplate.convertAndSend("/topic/acknowledgement/" + topic, ack);
             }
         });

@@ -121,4 +121,14 @@ public class OffSetManager {
         }
         return partitions;
     }
+
+    public Map<String,Boolean> getPartitionForSingleTopic(String consumerGroupId, String topic) throws TopicNotFoundException {
+        Map<String,Boolean> partitions=new HashMap<>();
+        for(String partition: clusterService.getPartitionForTopic(topic))
+        {
+            partitions.put(partition,true);
+            partitionOffsetPerConsumerGroup.get(consumerGroupId).computeIfAbsent(partition,k->0);
+        }
+        return partitions;
+    }
 }
