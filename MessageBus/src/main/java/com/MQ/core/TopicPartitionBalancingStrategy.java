@@ -3,7 +3,7 @@ package com.MQ.core;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class TopicPartitionBalancingStrategy {
+public class TopicPartitionBalancingStrategy implements BalancingStrategy{
 
     private final int partitionCount;
 
@@ -18,7 +18,8 @@ public class TopicPartitionBalancingStrategy {
 
     }
 
-    public int getNext(){
+    @Override
+    public Integer getNext(){
 
         int ret=currCounter%partitionCount;
         currCounter+=1;

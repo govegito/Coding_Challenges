@@ -1,7 +1,6 @@
 package com.MQ.core;
 
 import com.MQ.Config.ProducerConfig;
-import com.MQ.Controllers.ProducerController;
 import com.MQ.Exception.PartitionIsEmptyException;
 import com.MQ.Exception.PartitionNotFoundException;
 import com.MQ.Exception.TopicNotFoundException;
@@ -34,11 +33,12 @@ public class ClusterService {
     private ProducerConfig producerConfig;
 
 
-    public ClusterService() {
+    @Autowired
+    public ClusterService(ProducerConfig producerConfig) {
         this.brokerList = new ArrayList<>();
         this.partionToBroker = new HashMap<>();
         this.topicList= new HashMap<>();
-        this.balancingStrategy = new BrokerPartitionBalancingStrategy();
+        this.balancingStrategy = new BrokerPartitionBalancingStrategy(producerConfig.getBrokerNumber());
     }
 
     @PostConstruct

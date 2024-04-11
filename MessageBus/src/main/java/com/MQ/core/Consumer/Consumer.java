@@ -37,7 +37,7 @@ public class Consumer {
         this.availablePartition=Collections.synchronizedList(new ArrayList<>());
         this.isTopicBeingRevoked=new ConcurrentHashMap<>();
         this.clusterService=clusterService;
-        this.offsetManager=offSetManager;//        this.partitionToTopic=new HashMap<>();
+        this.offsetManager=offSetManager;
     }
 
     private String getTopicFromPartition(String partitionId) {

@@ -20,7 +20,6 @@ public class OffSetManager {
 
     @Autowired
     private ClusterService clusterService;
-
     @Autowired
     public OffSetManager() {
         this.partitionOffsetPerConsumerGroup=new HashMap<>();
@@ -40,20 +39,14 @@ public class OffSetManager {
     public void addTopicToConsumer(String consumerGroupId, String topic) throws ConsumerGroupNotFoundException, TopicNotFoundException {
          try{
                  lock.lock();
-
-                 if(!(topicPerConsumerGroup.containsKey(consumerGroupId) && partitionOffsetPerConsumerGroup.containsKey(consumerGroupId)))
-                 {
+                 if(!(topicPerConsumerGroup.containsKey(consumerGroupId) && partitionOffsetPerConsumerGroup.containsKey(consumerGroupId))) {
                      throw new ConsumerGroupNotFoundException("No consumer registered in offset client "+consumerGroupId);
                  }
-
-                 if(topicPerConsumerGroup.get(consumerGroupId).containsKey(topic))
-                 {
+                 if(topicPerConsumerGroup.get(consumerGroupId).containsKey(topic)) {
                      return;
                  }
                  else {
-
-                     for(String partitionId: clusterService.getPartitionForTopic(topic))
-                     {
+                     for(String partitionId: clusterService.getPartitionForTopic(topic)) {
                          partitionOffsetPerConsumerGroup.get(consumerGroupId).put(partitionId,0);
                      }
                      topicPerConsumerGroup.get(consumerGroupId).put(topic,true);
@@ -65,8 +58,7 @@ public class OffSetManager {
      }
 
      public void checkOffset(String consumerGroupId, String partitionId) throws ConsumerGroupNotFoundException, PartitionNotFoundException {
-             if(!partitionOffsetPerConsumerGroup.containsKey(consumerGroupId))
-             {
+             if(!partitionOffsetPerConsumerGroup.containsKey(consumerGroupId)) {
                  throw new ConsumerGroupNotFoundException("No consumer registered in offset client");
              }
              if(!partitionOffsetPerConsumerGroup.get(consumerGroupId).containsKey(partitionId))
@@ -79,7 +71,6 @@ public class OffSetManager {
         try{
             lock.lock();
             checkOffset(consumerGroupId,partitionId);
-
             return partitionOffsetPerConsumerGroup.get(consumerGroupId).get(partitionId);
         }
         finally {
@@ -91,7 +82,6 @@ public class OffSetManager {
         try{
             lock.lock();
             checkOffset(consumerGroupId,partitionId);
-
             int curr = partitionOffsetPerConsumerGroup.get(consumerGroupId).get(partitionId);
             partitionOffsetPerConsumerGroup.get(consumerGroupId).put(partitionId,curr+1);
         }
@@ -102,11 +92,9 @@ public class OffSetManager {
 
     public Map<String, Map<String, Boolean>> getAllPartitionWithTopic(List<String> topicList) throws TopicNotFoundException {
         Map<String, Map<String, Boolean>> partitions= new HashMap<>();
-        for(String topic: topicList)
-        {
+        for(String topic: topicList){
             partitions.put(topic,new HashMap<>());
-            for(String partition: clusterService.getPartitionForTopic(topic))
-            {
+            for(String partition: clusterService.getPartitionForTopic(topic)) {
                 partitions.get(topic).put(partition,true);
             }
         }
@@ -115,8 +103,7 @@ public class OffSetManager {
 
     public Map<String,Boolean> getPartitionForSingleTopic(String topic) throws TopicNotFoundException {
         Map<String,Boolean> partitions=new HashMap<>();
-        for(String partition: clusterService.getPartitionForTopic(topic))
-        {
+        for(String partition: clusterService.getPartitionForTopic(topic)) {
             partitions.put(partition,true);
         }
         return partitions;
@@ -124,8 +111,7 @@ public class OffSetManager {
 
     public Map<String,Boolean> getPartitionForSingleTopic(String consumerGroupId, String topic) throws TopicNotFoundException {
         Map<String,Boolean> partitions=new HashMap<>();
-        for(String partition: clusterService.getPartitionForTopic(topic))
-        {
+        for(String partition: clusterService.getPartitionForTopic(topic)) {
             partitions.put(partition,true);
             partitionOffsetPerConsumerGroup.get(consumerGroupId).computeIfAbsent(partition,k->0);
         }
