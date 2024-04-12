@@ -1,6 +1,6 @@
 WC/venv/
 .idea/
 LoadBalancer/target/
-MessageBus/target/
+MessagingQueue/target/
 **/.DS_Store
 
